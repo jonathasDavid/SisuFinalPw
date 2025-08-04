@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ edicao.nome }} - Detalhes</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-4">
+    {% if message %}
+        <div class="alert alert-success alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+        </div>
+    {% endif %}
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ edicao.nome }}</h1>
+        <div>
+            <a href="/app/edicao/update?id={{ edicao.id }}" class="btn btn-warning">
+                ✏️ Editar
+            </a>
+            <a href="/app/edicao/index" class="btn btn-secondary">
+                ← Voltar
+            </a>
+        </div>
+    </div>
+    
+    <!-- Dados da Edição -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>📋 Informações da Edição</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Nome:</dt>
+                        <dd class="col-sm-8">{{ edicao.nome }}</dd>
+                        
+                        <dt class="col-sm-4">Ano/Semestre:</dt>
+                        <dd class="col-sm-8">{{ edicao.ano }}.{{ edicao.semestre }}</dd>
+                        
+                        <dt class="col-sm-4">Data Início:</dt>
+                        <dd class="col-sm-8">{{ edicao.data_inicio or 'Não informado' }}</dd>
+                        
+                        <dt class="col-sm-4">Data Fim:</dt>
+                        <dd class="col-sm-8">{{ edicao.data_fim or 'Não informado' }}</dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <div class="alert alert-info">
+                        <h5>📊 Estatísticas</h5>
+                        <ul class="mb-0">
+                            <li><strong>Total de Cursos:</strong> {{ cursos|length }}</li>
+                            <li><strong>Total de Vagas:</strong> 
+                                {% set total_vagas = cursos|map(attribute='vagas')|map('int')|sum %}
+                                {{ total_vagas }}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Lista de Cursos -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3>🎓 Cursos Oferecidos</h3>
+            <span class="badge badge-primary badge-pill">{{ cursos|length }} curso(s)</span>
+        </div>
+        <div class="card-body">
+            {% if cursos %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>ID do Curso</th>
+                                <th>Nome do Curso</th>
+                                <th>Vagas</th>
+                                <th>Nota de Corte</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for curso in cursos %}
+                                <tr>
+                                    <td>
+                                        <span class="badge badge-secondary">{{ curso.curso_id }}</span>
+                                    </td>
+                                    <td>
+                                        <strong>{{ curso.nome }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-success">{{ curso.vagas }} vagas</span>
+                                    </td>
+                                    <td>
+                                        {% if curso.nota_corte %}
+                                            <span class="badge badge-info">{{ curso.nota_corte }}</span>
+                                        {% else %}
+                                            <span class="text-muted">Não informado</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <h5 class="text-muted">Nenhum curso cadastrado</h5>
+                    <p class="text-muted">Esta edição ainda não possui cursos associados.</p>
+                    <a href="/app/edicao/update?id={{ edicao.id }}" class="btn btn-primary">
+                        + Adicionar Cursos
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="mt-4">
+        <div class="alert alert-success">
+            <h5>✅ Ticket 2 - saveMany() Implementado!</h5>
+            <p class="mb-0">
+                Esta edição e seus cursos foram salvos usando transação mestre-detalhe.
+                O método <code>saveMany()</code> garante atomicidade da operação.
+            </p>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+</body>
+</html>

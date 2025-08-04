@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Dados Processados</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <style>
+        .json-display {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-4">
+    <h1>Dados Processados - Debug do Ticket 1</h1>
+    <p class="text-success">✅ <strong>Nested Forms processados com sucesso!</strong></p>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Dados da Edição (Mestre)</h3>
+                </div>
+                <div class="card-body">
+                    {% if debug_data.edicao %}
+                        <dl class="row">
+                            {% for key, value in debug_data.edicao.items() %}
+                                <dt class="col-sm-4">{{ key }}</dt>
+                                <dd class="col-sm-8">{{ value or '(vazio)' }}</dd>
+                            {% endfor %}
+                        </dl>
+                    {% else %}
+                        <p class="text-muted">Nenhum dado de edição processado.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Cursos (Detalhes)</h3>
+                </div>
+                <div class="card-body">
+                    {% if debug_data.cursos %}
+                        {% for curso in debug_data.cursos %}
+                            <div class="border p-2 mb-2">
+                                <strong>Curso {{ loop.index }}</strong>
+                                <ul class="list-unstyled mb-0 mt-1">
+                                    {% for key, value in curso.items() %}
+                                        <li><small><strong>{{ key }}:</strong> {{ value or '(vazio)' }}</small></li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">Nenhum curso processado.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mt-4">
+        <div class="card-header">
+            <h3>Estrutura Completa dos Dados (JSON)</h3>
+        </div>
+        <div class="card-body">
+            <div class="json-display">{{ debug_data | tojson(indent=2) }}</div>
+        </div>
+    </div>
+    
+    <div class="mt-4">
+        <a href="/app/edicao/create" class="btn btn-primary">
+            ← Voltar ao Formulário
+        </a>
+        <a href="/app/edicao/index" class="btn btn-secondary">
+            Lista de Edições
+        </a>
+    </div>
+    
+    <div class="alert alert-info mt-4">
+        <h5>📋 Status da Implementação</h5>
+        <ul class="mb-0">
+            <li>✅ <strong>Ticket 1 Implementado:</strong> Parsing de nested forms funcionando</li>
+            <li>⏳ <strong>Ticket 2 Pendente:</strong> Método saveMany() para persistência mestre-detalhe</li>
+        </ul>
+    </div>
+</div>
+</body>
+</html>

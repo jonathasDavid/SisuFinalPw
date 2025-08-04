@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar - {{ edicao.nome }}</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-4">
+    <h1>Editar Edição SISU</h1>
+    <p class="text-muted">Atualização mestre-detalhe com gerenciamento de ADD/MODIFY/REMOVE</p>
+    
+    <form action="/app/edicao/update?id={{ edicao.id }}" method="post">
+        <!-- Dados da Edição (Mestre) -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3>Dados da Edição</h3>
+            </div>
+            <div class="card-body">
+                {% if edicao.error %}
+                    <div class="alert alert-danger">{{ edicao.error }}</div>
+                {% endif %}
+                
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="nome">Nome da Edição</label>
+                        <input type="text" class="form-control" id="nome" name="nome" 
+                               value="{{ edicao.nome or '' }}" required>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="ano">Ano</label>
+                        <input type="number" class="form-control" id="ano" name="ano" 
+                               value="{{ edicao.ano or '' }}" min="2020" max="2030" required>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="semestre">Semestre</label>
+                        <select class="form-control" id="semestre" name="semestre" required>
+                            <option value="1" {% if edicao.semestre == '1' %}selected{% endif %}>1º Semestre</option>
+                            <option value="2" {% if edicao.semestre == '2' %}selected{% endif %}>2º Semestre</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="data_inicio">Data de Início</label>
+                        <input type="date" class="form-control" id="data_inicio" name="data_inicio" 
+                               value="{{ edicao.data_inicio or '' }}">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="data_fim">Data de Fim</label>
+                        <input type="date" class="form-control" id="data_fim" name="data_fim" 
+                               value="{{ edicao.data_fim or '' }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cursos (Detalhes) -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3>Cursos</h3>
+                <button type="button" class="btn btn-sm btn-success" onclick="adicionarCurso()">
+                    + Adicionar Curso
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>💡 Funcionalidades de UPDATE:</strong>
+                    <ul class="mb-0">
+                        <li>✏️ <strong>Modificar:</strong> Altere dados dos cursos existentes</li>
+                        <li>➕ <strong>Adicionar:</strong> Use o botão "Adicionar Curso"</li>
+                        <li>🗑️ <strong>Remover:</strong> Use o botão "Remover" de cada curso</li>
+                    </ul>
+                </div>
+                
+                <div id="cursos-container">
+                    <!-- Cursos serão carregados via JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary btn-lg">
+                💾 Salvar Alterações
+            </button>
+            <a href="/app/edicao/view?id={{ edicao.id }}" class="btn btn-secondary btn-lg ml-2">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+let cursoIndex = 0;
+let cursosExistentes = [];
+
+// Carregar cursos existentes do servidor
+function carregarCursosExistentes() {
+    // Em uma implementação real, isso viria do controller
+    // Por simplicidade, vamos simular com alguns dados
+    try {
+        const sessionData = sessionStorage.getItem('cursos_existentes');
+        if (sessionData) {
+            cursosExistentes = JSON.parse(sessionData);
+        }
+    } catch (e) {
+        // Fallback com dados de exemplo se não conseguir carregar
+        cursosExistentes = [
+            {id: 1, curso_id: '12345', nome: 'Engenharia da Computação', vagas: '40', nota_corte: '750.50'},
+            {id: 2, curso_id: '67890', nome: 'Medicina', vagas: '50', nota_corte: '890.25'}
+        ];
+    }
+    
+    // Renderizar cursos existentes
+    cursosExistentes.forEach(curso => {
+        adicionarCursoExistente(curso);
+    });
+}
+
+function adicionarCursoExistente(curso) {
+    const container = document.getElementById('cursos-container');
+    const cursoDiv = document.createElement('div');
+    cursoDiv.className = 'curso-item border p-3 mb-3';
+    cursoDiv.setAttribute('data-index', cursoIndex);
+    cursoDiv.setAttribute('data-id', curso.id);
+    
+    cursoDiv.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5>Curso ${cursoIndex + 1} <span class="badge badge-info">ID: ${curso.id}</span></h5>
+            <button type="button" class="btn btn-sm btn-danger" onclick="removerCurso(this)">
+                🗑️ Remover
+            </button>
+        </div>
+        
+        <input type="hidden" name="cursos[${cursoIndex}][id]" value="${curso.id}">
+        
+        <div class="form-row">
+            <div class="form-group col-md-3">
+                <label>ID do Curso</label>
+                <input type="number" class="form-control" name="cursos[${cursoIndex}][curso_id]" 
+                       value="${curso.curso_id}" required>
+            </div>
+            <div class="form-group col-md-6">
+                <label>Nome do Curso</label>
+                <input type="text" class="form-control" name="cursos[${cursoIndex}][nome]" 
+                       value="${curso.nome}" required>
+            </div>
+            <div class="form-group col-md-3">
+                <label>Vagas</label>
+                <input type="number" class="form-control" name="cursos[${cursoIndex}][vagas]" 
+                       value="${curso.vagas}" min="1" required>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label>Nota de Corte (opcional)</label>
+                <input type="number" class="form-control" name="cursos[${cursoIndex}][nota_corte]" 
+                       value="${curso.nota_corte || ''}" step="0.01">
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(cursoDiv);
+    cursoIndex++;
+}
+
+function adicionarCurso() {
+    const container = document.getElementById('cursos-container');
+    const newCurso = document.createElement('div');
+    newCurso.className = 'curso-item border p-3 mb-3';
+    newCurso.setAttribute('data-index', cursoIndex);
+    
+    newCurso.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5>Curso ${cursoIndex + 1} <span class="badge badge-success">NOVO</span></h5>
+            <button type="button" class="btn btn-sm btn-danger" onclick="removerCurso(this)">
+                🗑️ Remover
+            </button>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group col-md-3">
+                <label>ID do Curso</label>
+                <input type="number" class="form-control" name="cursos[${cursoIndex}][curso_id]" 
+                       placeholder="Ex: 12345" required>
+            </div>
+            <div class="form-group col-md-6">
+                <label>Nome do Curso</label>
+                <input type="text" class="form-control" name="cursos[${cursoIndex}][nome]" 
+                       placeholder="Ex: Engenharia da Computação" required>
+            </div>
+            <div class="form-group col-md-3">
+                <label>Vagas</label>
+                <input type="number" class="form-control" name="cursos[${cursoIndex}][vagas]" 
+                       placeholder="Ex: 40" min="1" required>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label>Nota de Corte (opcional)</label>
+                <input type="number" class="form-control" name="cursos[${cursoIndex}][nota_corte]" 
+                       step="0.01" placeholder="Ex: 750.50">
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(newCurso);
+    cursoIndex++;
+}
+
+function removerCurso(button) {
+    const cursoItem = button.closest('.curso-item');
+    if (document.querySelectorAll('.curso-item').length > 1) {
+        cursoItem.remove();
+        reindexarCursos();
+    } else {
+        alert('Deve haver pelo menos um curso.');
+    }
+}
+
+function reindexarCursos() {
+    const cursos = document.querySelectorAll('.curso-item');
+    cursos.forEach((curso, index) => {
+        curso.setAttribute('data-index', index);
+        curso.querySelector('h5').innerHTML = 
+            curso.querySelector('h5').innerHTML.replace(/Curso \d+/, `Curso ${index + 1}`);
+        
+        const inputs = curso.querySelectorAll('input');
+        inputs.forEach(input => {
+            const name = input.getAttribute('name');
+            if (name && name.includes('[')) {
+                const fieldName = name.split('[')[1].split(']')[1];
+                input.setAttribute('name', `cursos[${index}]${fieldName}`);
+            }
+        });
+    });
+    
+    cursoIndex = cursos.length;
+}
+
+// Inicializar página
+document.addEventListener('DOMContentLoaded', function() {
+    carregarCursosExistentes();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edições SISU</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Edições SISU</h1>
+        <a href="/app/edicao/create" class="btn btn-primary">
+            + Nova Edição
+        </a>
+    </div>
+    
+    <div class="alert alert-info">
+        <h5>🚀 Demo do Ticket 1 - Nested Models</h5>
+        <p class="mb-0">
+            Clique em "Nova Edição" para testar o processamento de formulários com campos aninhados.
+            O sistema agora suporta campos como <code>cursos[0][nome]</code>, <code>cursos[1][vagas]</code>, etc.
+        </p>
+    </div>
+    
+    {% if edicoes %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Ano/Semestre</th>
+                        <th>Período</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for edicao in edicoes %}
+                        <tr>
+                            <td>{{ edicao.id }}</td>
+                            <td>{{ edicao.nome }}</td>
+                            <td>{{ edicao.ano }}.{{ edicao.semestre }}</td>
+                            <td>{{ edicao.data_inicio }} a {{ edicao.data_fim }}</td>
+                            <td>
+                                <a href="/app/edicao/view?id={{ edicao.id }}" class="btn btn-sm btn-info">Ver</a>
+                                <a href="/app/edicao/update?id={{ edicao.id }}" class="btn btn-sm btn-warning">Editar</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="card">
+            <div class="card-body text-center">
+                <h5>Nenhuma edição cadastrada</h5>
+                <p class="text-muted">Comece criando sua primeira edição SISU com cursos.</p>
+                <a href="/app/edicao/create" class="btn btn-primary">
+                    Criar Primeira Edição
+                </a>
+            </div>
+        </div>
+    {% endif %}
+    
+    <div class="mt-4">
+        <a href="/app/feedback/index" class="btn btn-secondary">
+            ← Voltar para Feedbacks
+        </a>
+    </div>
+</div>
+</body>
+</html>

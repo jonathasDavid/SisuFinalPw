@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Edição SISU</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-4">
+    <h1>Criar Edição SISU com Cursos</h1>
+    <p class="text-muted">Exemplo de formulário com nested models (mestre-detalhe)</p>
+    
+    <form action="/app/edicao/create" method="post">
+        <!-- Dados da Edição (Mestre) -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3>Dados da Edição</h3>
+            </div>
+            <div class="card-body">
+                {% if edicao.error %}
+                    <div class="alert alert-danger">{{ edicao.error }}</div>
+                {% endif %}
+                
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="nome">Nome da Edição</label>
+                        <input type="text" class="form-control" id="nome" name="nome" 
+                               value="{{ edicao.nome or '' }}" placeholder="Ex: SISU 2025.1">
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="ano">Ano</label>
+                        <input type="number" class="form-control" id="ano" name="ano" 
+                               value="{{ edicao.ano or '2025' }}" min="2020" max="2030">
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="semestre">Semestre</label>
+                        <select class="form-control" id="semestre" name="semestre">
+                            <option value="1" {% if edicao.semestre == '1' %}selected{% endif %}>1º Semestre</option>
+                            <option value="2" {% if edicao.semestre == '2' %}selected{% endif %}>2º Semestre</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="data_inicio">Data de Início</label>
+                        <input type="date" class="form-control" id="data_inicio" name="data_inicio" 
+                               value="{{ edicao.data_inicio or '' }}">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="data_fim">Data de Fim</label>
+                        <input type="date" class="form-control" id="data_fim" name="data_fim" 
+                               value="{{ edicao.data_fim or '' }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cursos (Detalhes) -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3>Cursos</h3>
+                <button type="button" class="btn btn-sm btn-success" onclick="adicionarCurso()">
+                    + Adicionar Curso
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="cursos-container">
+                    <!-- Curso inicial -->
+                    <div class="curso-item border p-3 mb-3" data-index="0">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5>Curso 1</h5>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="removerCurso(this)">
+                                Remover
+                            </button>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label>ID do Curso</label>
+                                <input type="number" class="form-control" name="cursos[0][curso_id]" 
+                                       placeholder="Ex: 12345">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label>Nome do Curso</label>
+                                <input type="text" class="form-control" name="cursos[0][nome]" 
+                                       placeholder="Ex: Engenharia da Computação">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label>Vagas</label>
+                                <input type="number" class="form-control" name="cursos[0][vagas]" 
+                                       placeholder="Ex: 40" min="1">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label>Nota de Corte (opcional)</label>
+                                <input type="number" class="form-control" name="cursos[0][nota_corte]" 
+                                       step="0.01" placeholder="Ex: 750.50">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary btn-lg">
+                💾 Criar Edição com Cursos
+            </button>
+            <a href="/app/edicao/index" class="btn btn-secondary btn-lg ml-2">Cancelar</a>
+        </div>
+    </form>
+    
+    <div class="mt-4">
+        <div class="alert alert-info">
+            <h5>🚀 Tickets 1 & 2 Implementados!</h5>
+            <ul class="mb-0">
+                <li>✅ <strong>Ticket 1:</strong> Parsing de nested forms (<code>cursos[0][nome]</code>)</li>
+                <li>✅ <strong>Ticket 2:</strong> Persistência mestre-detalhe com <code>saveMany()</code></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+let cursoIndex = 1;
+
+function adicionarCurso() {
+    const container = document.getElementById('cursos-container');
+    const newCurso = document.createElement('div');
+    newCurso.className = 'curso-item border p-3 mb-3';
+    newCurso.setAttribute('data-index', cursoIndex);
+    
+    newCurso.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5>Curso ${cursoIndex + 1}</h5>
+            <button type="button" class="btn btn-sm btn-danger" onclick="removerCurso(this)">
+                Remover
+            </button>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group col-md-3">
+                <label>ID do Curso</label>
+                <input type="number" class="form-control" name="cursos[${cursoIndex}][curso_id]" 
+                       placeholder="Ex: 12345">
+            </div>
+            <div class="form-group col-md-6">
+                <label>Nome do Curso</label>
+                <input type="text" class="form-control" name="cursos[${cursoIndex}][nome]" 
+                       placeholder="Ex: Engenharia da Computação">
+            </div>
+            <div class="form-group col-md-3">
+                <label>Vagas</label>
+                <input type="number" class="form-control" name="cursos[${cursoIndex}][vagas]" 
+                       placeholder="Ex: 40" min="1">
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label>Nota de Corte (opcional)</label>
+                <input type="number" class="form-control" name="cursos[${cursoIndex}][nota_corte]" 
+                       step="0.01" placeholder="Ex: 750.50">
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(newCurso);
+    cursoIndex++;
+}
+
+function removerCurso(button) {
+    const cursoItem = button.closest('.curso-item');
+    if (document.querySelectorAll('.curso-item').length > 1) {
+        cursoItem.remove();
+        reindexarCursos();
+    } else {
+        alert('Deve haver pelo menos um curso.');
+    }
+}
+
+function reindexarCursos() {
+    const cursos = document.querySelectorAll('.curso-item');
+    cursos.forEach((curso, index) => {
+        curso.setAttribute('data-index', index);
+        curso.querySelector('h5').textContent = `Curso ${index + 1}`;
+        
+        const inputs = curso.querySelectorAll('input');
+        inputs.forEach(input => {
+            const name = input.getAttribute('name');
+            if (name && name.includes('[')) {
+                const fieldName = name.split('[')[1].split(']')[1];
+                input.setAttribute('name', `cursos[${index}]${fieldName}`);
+            }
+        });
+    });
+    
+    cursoIndex = cursos.length;
+}
+</script>
+</body>
+</html>
