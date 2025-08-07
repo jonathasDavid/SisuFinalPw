@@ -18,9 +18,6 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>{{ edicao.nome }}</h1>
         <div>
-            <a href="/app/edicao/update?id={{ edicao.id }}" class="btn btn-warning">
-                ✏️ Editar
-            </a>
             <a href="/app/edicao/index" class="btn btn-secondary">
                 ← Voltar
             </a>
@@ -53,11 +50,8 @@
                     <div class="alert alert-info">
                         <h5>📊 Estatísticas</h5>
                         <ul class="mb-0">
-                            <li><strong>Total de Cursos:</strong> {{ cursos|length }}</li>
-                            <li><strong>Total de Vagas:</strong> 
-                                {% set total_vagas = cursos|map(attribute='vagas')|map('int')|sum %}
-                                {{ total_vagas }}
-                            </li>
+                            <li><strong>Total de Cursos:</strong> {{ edicao_cursos|length }}</li>
+                            <li><strong>DEBUG - Tipo:</strong> {{ edicao_cursos.__class__.__name__ if edicao_cursos else 'None' }}</li>
                         </ul>
                     </div>
                 </div>
@@ -69,37 +63,51 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h3>🎓 Cursos Oferecidos</h3>
-            <span class="badge badge-primary badge-pill">{{ cursos|length }} curso(s)</span>
+            <span class="badge badge-primary badge-pill">
+                {{ edicao_cursos|length }} {{ 'curso' if edicao_cursos|length == 1 else 'cursos' }}
+            </span>
         </div>
         <div class="card-body">
-            {% if cursos %}
+            <!-- DEBUG: Mostrar dados brutos -->
+            <div class="alert alert-info">
+                <h5>🔍 DEBUG - Dados Recebidos:</h5>
+                <ul>
+                    <li><strong>edicao_cursos tipo:</strong> {{ edicao_cursos.__class__.__name__ if edicao_cursos else 'None' }}</li>
+                    <li><strong>edicao_cursos length:</strong> {{ edicao_cursos|length if edicao_cursos else 0 }}</li>
+                    <li><strong>edicao_cursos:</strong> {{ edicao_cursos }}</li>
+                </ul>
+            </div>
+            
+            {% if edicao_cursos and edicao_cursos|length > 0 %}
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead class="thead-light">
                             <tr>
                                 <th>ID do Curso</th>
                                 <th>Nome do Curso</th>
-                                <th>Vagas</th>
-                                <th>Nota de Corte</th>
+                                <th>Informações</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for curso in cursos %}
+                            {% for ec in edicao_cursos %}
                                 <tr>
                                     <td>
-                                        <span class="badge badge-secondary">{{ curso.curso_id }}</span>
+                                        <span class="badge badge-secondary">
+                                            {{ ec.curso.id if ec.curso else ec.curso_id }}
+                                        </span>
                                     </td>
                                     <td>
-                                        <strong>{{ curso.nome }}</strong>
+                                        <strong>
+                                            {{ ec.curso.nome if ec.curso else 'Nome não encontrado' }}
+                                        </strong>
                                     </td>
                                     <td>
-                                        <span class="badge badge-success">{{ curso.vagas }} vagas</span>
-                                    </td>
-                                    <td>
-                                        {% if curso.nota_corte %}
-                                            <span class="badge badge-info">{{ curso.nota_corte }}</span>
+                                        {% if ec.configuracao %}
+                                            <span class="badge badge-success">
+                                                Vagas AC: {{ ec.configuracao.vagas_ac or 0 }}
+                                            </span>
                                         {% else %}
-                                            <span class="text-muted">Não informado</span>
+                                            <span class="badge badge-warning">Sem configuração</span>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -108,12 +116,17 @@
                     </table>
                 </div>
             {% else %}
-                <div class="text-center py-4">
-                    <h5 class="text-muted">Nenhum curso cadastrado</h5>
-                    <p class="text-muted">Esta edição ainda não possui cursos associados.</p>
-                    <a href="/app/edicao/update?id={{ edicao.id }}" class="btn btn-primary">
-                        + Adicionar Cursos
-                    </a>
+                <div class="alert alert-warning">
+                    <h5>⚠️ Nenhum curso associado</h5>
+                    <p class="mb-2">Esta edição ainda não possui cursos associados.</p>
+                    <small class="text-muted">
+                        <em>
+                            Nota: Cursos só podem ser adicionados durante a criação da edição.
+                            <a href="https://docs.seusistema.com/edicao-cursos#restricoes" target="_blank" title="Saiba mais sobre esta regra de negócio">
+                                <span class="ml-1" style="text-decoration: underline; cursor: pointer;">(Por quê?)</span>
+                            </a>
+                        </em>
+                    </small>
                 </div>
             {% endif %}
         </div>

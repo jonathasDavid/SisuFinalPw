@@ -8,8 +8,25 @@ class BaseModel(Model):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.details_data = {}  # Armazena dados dos detalhes para saveMany
-        self.error = None
+        # Usar atributos privados para evitar conflitos com campos do banco
+        self._details_data = {}  # Armazena dados dos detalhes para saveMany
+        self._error = None
+    
+    @property
+    def details_data(self):
+        return getattr(self, '_details_data', {})
+    
+    @details_data.setter
+    def details_data(self, value):
+        self._details_data = value
+    
+    @property
+    def error(self):
+        return getattr(self, '_error', None)
+    
+    @error.setter
+    def error(self, value):
+        self._error = value
     
     def save_many(self, details_data=None, detail_models=None):
         """

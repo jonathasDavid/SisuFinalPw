@@ -12,6 +12,29 @@ def app(environ, start_response):
         session_id,session = get_session(environ)
         environ['session']= session
 
+        # Handle root path and redirect routes
+        if path == '/' or path == '':
+            # Redirect to home controller
+            start_response("302 Found", [
+                ("Location", "/app/home/index"),
+                ("Content-Length", "0")
+            ])
+            return [b'']
+        elif path == '/admin':
+            # Redirect to admin panel (edicao controller)
+            start_response("302 Found", [
+                ("Location", "/app/edicao/index"),
+                ("Content-Length", "0")
+            ])
+            return [b'']
+        elif path == '/candidato':
+            # Redirect to candidato panel
+            start_response("302 Found", [
+                ("Location", "/app/candidato/index"),
+                ("Content-Length", "0")
+            ])
+            return [b'']
+
         path_array = path.split('/')
         classname = path_array[2].capitalize() + 'Controller'
 
@@ -39,6 +62,10 @@ def app(environ, start_response):
             <hr>
             <h3>Links para teste:</h3>
             <ul>
+                <li><a href="/">Página Inicial (Ticket 1)</a></li>
+                <li><a href="/app/home/index">Home Controller</a></li>
+                <li><a href="/admin">Acesso Administrador</a></li>
+                <li><a href="/candidato">Acesso Candidato</a></li>
                 <li><a href="/app/feedback/index">Feedback (original)</a></li>
                 <li><a href="/app/test/index">Teste simples</a></li>
             </ul>
@@ -53,12 +80,12 @@ def app(environ, start_response):
 
 if __name__ == '__main__':
     config = {
-        'pgsql': {
-            'driver': 'pgsql',
+        'postgres': {
+            'driver': 'postgres',
             'host': 'db',
-            'database': os.environ.get('DB_DATABASE', 'basefeedback'),
-            'user': os.environ['DB_USER'],
-            'password': os.environ['DB_PASSWORD'],
+            'database': 'basefeedback',
+            'user': 'app',
+            'password': 'app2025',
             'prefix': ''
         }
     }

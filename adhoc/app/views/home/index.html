@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema SISU - Acesso</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 60px 40px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+        }
+
+        .access-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .access-button {
+            display: block;
+            text-decoration: none;
+            padding: 20px 30px;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .admin-button {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+        }
+
+        .admin-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(255, 107, 107, 0.4);
+            border-color: #ff5252;
+        }
+
+        .candidato-button {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            color: white;
+        }
+
+        .candidato-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(78, 205, 196, 0.4);
+            border-color: #44a08d;
+        }
+
+        .footer {
+            margin-top: 30px;
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 40px 20px;
+            }
+            
+            .logo {
+                font-size: 2rem;
+            }
+            
+            .access-button {
+                padding: 15px 20px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🎓 SISU</div>
+        <div class="subtitle">Sistema de Seleção Unificada</div>
+        
+        <div class="access-buttons">
+            <a href="/app/edicao/index" class="access-button admin-button">
+                👨‍💼 Administrador
+            </a>
+            <a href="/app/candidato/index" class="access-button candidato-button">
+                👤 Candidato
+            </a>
+        </div>
+        
+        <div class="footer">
+            Escolha seu tipo de acesso para continuar
+        </div>
+    </div>
+</body>
+</html>

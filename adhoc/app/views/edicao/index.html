@@ -3,23 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edições SISU</title>
+    <title>Painel Administrador - SISU</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <style>
+        .admin-header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        
+        .home-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .home-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+    </style>
 </head>
 <body>
-<div class="container mt-4">
+<div class="admin-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="mb-1">👨‍💼 Painel do Administrador</h1>
+                <p class="mb-0">Gerenciar Edições SISU</p>
+            </div>
+            <a href="/app/home/index" class="home-button">
+                🏠 Página Inicial
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    {% if session.flash %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session.flash }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    {% endif %}
+    
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Edições SISU</h1>
+        <h2>Edições SISU</h2>
         <a href="/app/edicao/create" class="btn btn-primary">
             + Nova Edição
         </a>
     </div>
     
     <div class="alert alert-info">
-        <h5>🚀 Demo do Ticket 1 - Nested Models</h5>
+        <h5>🚀 Funcionalidades Disponíveis</h5>
         <p class="mb-0">
-            Clique em "Nova Edição" para testar o processamento de formulários com campos aninhados.
-            O sistema agora suporta campos como <code>cursos[0][nome]</code>, <code>cursos[1][vagas]</code>, etc.
+            Clique em "Nova Edição" para criar uma edição com cursos aninhados.
+            O sistema suporta a criação de edições com múltiplos cursos simultaneamente.
         </p>
     </div>
     
@@ -43,8 +91,13 @@
                             <td>{{ edicao.ano }}.{{ edicao.semestre }}</td>
                             <td>{{ edicao.data_inicio }} a {{ edicao.data_fim }}</td>
                             <td>
-                                <a href="/app/edicao/view?id={{ edicao.id }}" class="btn btn-sm btn-info">Ver</a>
-                                <a href="/app/edicao/update?id={{ edicao.id }}" class="btn btn-sm btn-warning">Editar</a>
+                                <a href="/app/edicao/view?id={{ edicao.id }}" class="btn btn-sm btn-info"> Ver</a>
+                                <form method="POST" action="/app/edicao/delete?id={{ edicao.id }}" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-danger" 
+                                            onclick="return confirm('Tem certeza que deseja excluir a edição {{ edicao.nome }}?\n\nEsta ação não pode ser desfeita e todos os cursos associados também serão removidos.')">
+                                         Excluir
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                     {% endfor %}
@@ -62,12 +115,12 @@
             </div>
         </div>
     {% endif %}
-    
-    <div class="mt-4">
-        <a href="/app/feedback/index" class="btn btn-secondary">
-            ← Voltar para Feedbacks
-        </a>
-    </div>
 </div>
+
+<!-- Scripts Bootstrap -->
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
 </body>
 </html>

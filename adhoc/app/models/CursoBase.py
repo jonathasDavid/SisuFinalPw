@@ -1,22 +1,28 @@
 from models.BaseModel import BaseModel
 
-class Curso(BaseModel):
+class CursoBase(BaseModel):
     """
-    Modelo para representar um Curso do SISU.
-    Campos: id, nome
+    Modelo para representar o catálogo de cursos disponíveis no sistema SISU.
+    Esta tabela contém todos os cursos que podem ser selecionados ao criar edições.
     """
-    __table__ = 'cursos'
+    __table__ = 'cursos_base'
     __timestamps__ = False
-    __fillable__ = ['nome']
+    __fillable__ = ['curso_id', 'nome', 'area', 'modalidade', 'duracao_semestres']
 
     def validate(self):
         """
-        Validação básica para um curso.
+        Validação básica para um curso base.
         """
         errors = []
         
+        if not self.curso_id or not str(self.curso_id).isdigit():
+            errors.append('ID do curso deve ser um número válido')
+        
         if not self.nome or len(self.nome.strip()) < 2:
             errors.append('Nome do curso deve ter pelo menos 2 caracteres')
+            
+        if not self.area or len(self.area.strip()) < 2:
+            errors.append('Área do curso deve ter pelo menos 2 caracteres')
         
         if errors:
             self.error = '; '.join(errors)
@@ -26,36 +32,44 @@ class Curso(BaseModel):
 
     def save(self, **kwargs):
         """
-        Salva o curso com validação.
+        Salva o curso base com validação.
         """
         if self.validate():
             return super().save(**kwargs)
         return False
     
     @classmethod
-    def todos_cursos(cls):
+    def todos_cursos_disponiveis(cls):
         """
-        Retorna todos os cursos disponíveis.
+        Retorna todos os cursos disponíveis para seleção.
         """
         try:
             return cls.all()
-        except Exception as e:
-            print(f"Erro ao buscar cursos: {e}")
+        except:
             return []
     
-    def edicao_cursos(self):
+    @classmethod
+    def buscar_por_area(cls, area):
         """
-        Relacionamento com EdicaoCurso (hasMany).
+        Busca cursos por área.
         """
-        from models.EdicaoCurso import EdicaoCurso
-        return self.has_many(EdicaoCurso, 'curso_id')
+        try:
+            return cls.where('area', area).get()
+        except:
+            return []
     
-    def candidatos(self):
+    def to_dict(self):
         """
-        Relacionamento com Candidato (hasMany).
+        Converte o modelo para dicionário.
         """
-        from models.Candidato import Candidato
-        return self.has_many(Candidato, 'curso_id')
+        return {
+            'id': self.id,
+            'curso_id': self.curso_id,
+            'nome': self.nome,
+            'area': self.area,
+            'modalidade': self.modalidade,
+            'duracao_semestres': self.duracao_semestres
+        }
     
     @staticmethod
     def calcular_distribuicao_vagas(total_vagas):

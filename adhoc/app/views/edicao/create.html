@@ -5,37 +5,133 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Criar Edição SISU</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <style>
+        .admin-header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        
+        .curso-card {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .curso-card.selected {
+            border-color: #007bff;
+            background-color: #f8f9fa;
+        }
+        
+        .curso-header {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px 8px 0 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .vagas-section {
+            padding: 15px;
+        }
+        
+        .modalidade-group {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: #fff;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .modalidade-label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9rem;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .vagas-input {
+            width: 100px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .vagas-input:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+        
+        .total-vagas {
+            background: #e3f2fd;
+            color: #1976d2;
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        .home-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .home-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+    </style>
 </head>
 <body>
-<div class="container mt-4">
-    <h1>Criar Edição SISU com Cursos</h1>
-    <p class="text-muted">Exemplo de formulário com nested models (mestre-detalhe)</p>
-    
-    <form action="/app/edicao/create" method="post">
+<div class="admin-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="mb-1">📝 Nova Edição SISU</h1>
+                <p class="mb-0">Criar edição e associar cursos existentes</p>
+            </div>
+            <a href="/app/edicao/index" class="home-button">
+                ← Voltar para Edições
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <form action="/app/edicao/create" method="post" onsubmit="debugSubmit(event)">
         <!-- Dados da Edição (Mestre) -->
         <div class="card mb-4">
             <div class="card-header">
                 <h3>Dados da Edição</h3>
             </div>
             <div class="card-body">
-                {% if edicao.error %}
-                    <div class="alert alert-danger">{{ edicao.error }}</div>
+                {% if error_message %}
+                    <div class="alert alert-danger">{{ error_message }}</div>
                 {% endif %}
                 
                 <div class="form-row">
                     <div class="form-group col-md-6">
                         <label for="nome">Nome da Edição</label>
                         <input type="text" class="form-control" id="nome" name="nome" 
-                               value="{{ edicao.nome or '' }}" placeholder="Ex: SISU 2025.1">
+                               value="{{ edicao.nome or '' }}" required>
                     </div>
                     <div class="form-group col-md-3">
                         <label for="ano">Ano</label>
                         <input type="number" class="form-control" id="ano" name="ano" 
-                               value="{{ edicao.ano or '2025' }}" min="2020" max="2030">
+                               value="{{ edicao.ano or '' }}" min="2020" max="2030" required>
                     </div>
                     <div class="form-group col-md-3">
                         <label for="semestre">Semestre</label>
-                        <select class="form-control" id="semestre" name="semestre">
+                        <select class="form-control" id="semestre" name="semestre" required>
                             <option value="1" {% if edicao.semestre == '1' %}selected{% endif %}>1º Semestre</option>
                             <option value="2" {% if edicao.semestre == '2' %}selected{% endif %}>2º Semestre</option>
                         </select>
@@ -57,149 +153,399 @@
             </div>
         </div>
 
-        <!-- Cursos (Detalhes) -->
+        <!-- Cursos Disponíveis para Seleção -->
         <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h3>Cursos</h3>
-                <button type="button" class="btn btn-sm btn-success" onclick="adicionarCurso()">
-                    + Adicionar Curso
-                </button>
+            <div class="card-header">
+                <h3>🎓 Selecionar Cursos e Definir Total de Vagas</h3>
+                <small class="text-muted">Marque os cursos que farão parte desta edição e defina o total de vagas (a distribuição será calculada automaticamente)</small>
             </div>
             <div class="card-body">
-                <div id="cursos-container">
-                    <!-- Curso inicial -->
-                    <div class="curso-item border p-3 mb-3" data-index="0">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h5>Curso 1</h5>
-                            <button type="button" class="btn btn-sm btn-danger" onclick="removerCurso(this)">
-                                Remover
-                            </button>
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group col-md-3">
-                                <label>ID do Curso</label>
-                                <input type="number" class="form-control" name="cursos[0][curso_id]" 
-                                       placeholder="Ex: 12345">
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label>Nome do Curso</label>
-                                <input type="text" class="form-control" name="cursos[0][nome]" 
-                                       placeholder="Ex: Engenharia da Computação">
-                            </div>
-                            <div class="form-group col-md-3">
-                                <label>Vagas</label>
-                                <input type="number" class="form-control" name="cursos[0][vagas]" 
-                                       placeholder="Ex: 40" min="1">
-                            </div>
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label>Nota de Corte (opcional)</label>
-                                <input type="number" class="form-control" name="cursos[0][nota_corte]" 
-                                       step="0.01" placeholder="Ex: 750.50">
-                            </div>
-                        </div>
+                {% if cursos_disponiveis %}
+                    <div class="alert alert-info">
+                        <strong>Instruções:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Marque os cursos que deseja incluir nesta edição</li>
+                            <li>Para cada curso selecionado, defina o <strong>total de vagas</strong></li>
+                            <li>A distribuição por modalidade/cota será calculada automaticamente</li>
+                            <li>O sistema aplicará os percentuais oficiais do SISU</li>
+                        </ul>
                     </div>
-                </div>
+                    
+                    <div id="cursos-container">
+                        {% for curso in cursos_disponiveis %}
+                        <div class="curso-card" id="curso-card-{{ curso.id }}">
+                            <div class="curso-header">
+                                <div class="form-check">
+                                    <input class="form-check-input curso-checkbox" type="checkbox" 
+                                           id="curso_{{ curso.id }}" name="curso_{{ curso.id }}"
+                                           {% if curso.id|string in cursos_selecionados_form %}checked{% endif %}
+                                           onchange="toggleCurso({{ curso.id }})">
+                                    <label class="form-check-label" for="curso_{{ curso.id }}">
+                                        <strong>{{ curso.nome|e }}</strong>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="vagas-section" id="vagas-section-{{ curso.id }}" 
+                                 style="display: {% if curso.id|string in cursos_selecionados_form %}block{% else %}none{% endif %};">
+                                <h6 class="mb-3">📊 Definir Total de Vagas:</h6>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="modalidade-group">
+                                            <label class="modalidade-label">Total de Vagas do Curso</label>
+                                            <input type="number" class="form-control vagas-input" 
+                                                   name="total_vagas_{{ curso.id }}" min="1" 
+                                                   value="{{ vagas_preenchidas.get(curso.id|string, {}).get('total_vagas', '') }}" 
+                                                   placeholder="Ex: 50" onchange="calcularDistribuicao({{ curso.id }})"
+                                                   style="width: 150px; text-align: center; font-size: 1.2rem; font-weight: bold;">
+                                            <small class="text-muted">Digite o número total de vagas para este curso</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <div class="alert alert-info mb-0">
+                                            <strong>📋 Distribuição Automática:</strong><br>
+                                            <small>
+                                                • 50% Ampla Concorrência<br>
+                                                • 25% PPI + EP + BR<br>
+                                                • 25% EP + BR<br>
+                                                • 20% PPI + EP<br>
+                                                • 20% EP<br>
+                                                • 10% PcD
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Distribuição Calculada (Read-only) -->
+                                <div class="mt-3" id="distribuicao-{{ curso.id }}" style="display: none;">
+                                    <h6 class="mb-3">🔢 Distribuição Calculada:</h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="modalidade-group bg-light">
+                                                <label class="modalidade-label">Ampla Concorrência (AC)</label>
+                                                <input type="number" class="form-control vagas-input" 
+                                                       name="vagas_ac_{{ curso.id }}" readonly
+                                                       style="background-color: #f8f9fa;">
+                                                <small class="text-muted">Calculado automaticamente</small>
+                                            </div>
+                                            
+                                            <div class="modalidade-group bg-light">
+                                                <label class="modalidade-label">PPI + Escola Pública + Baixa Renda</label>
+                                                <input type="number" class="form-control vagas-input" 
+                                                       name="vagas_ppi_br_{{ curso.id }}" readonly
+                                                       style="background-color: #f8f9fa;">
+                                                <small class="text-muted">25% das cotas</small>
+                                            </div>
+                                            
+                                            <div class="modalidade-group bg-light">
+                                                <label class="modalidade-label">Escola Pública + Baixa Renda</label>
+                                                <input type="number" class="form-control vagas-input" 
+                                                       name="vagas_publica_br_{{ curso.id }}" readonly
+                                                       style="background-color: #f8f9fa;">
+                                                <small class="text-muted">25% das cotas</small>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <div class="modalidade-group bg-light">
+                                                <label class="modalidade-label">PPI + Escola Pública</label>
+                                                <input type="number" class="form-control vagas-input" 
+                                                       name="vagas_ppi_publica_{{ curso.id }}" readonly
+                                                       style="background-color: #f8f9fa;">
+                                                <small class="text-muted">20% das cotas</small>
+                                            </div>
+                                            
+                                            <div class="modalidade-group bg-light">
+                                                <label class="modalidade-label">Escola Pública</label>
+                                                <input type="number" class="form-control vagas-input" 
+                                                       name="vagas_publica_{{ curso.id }}" readonly
+                                                       style="background-color: #f8f9fa;">
+                                                <small class="text-muted">20% das cotas</small>
+                                            </div>
+                                            
+                                            <div class="modalidade-group bg-light">
+                                                <label class="modalidade-label">Pessoas com Deficiência (PcD)</label>
+                                                <input type="number" class="form-control vagas-input" 
+                                                       name="vagas_deficientes_{{ curso.id }}" readonly
+                                                       style="background-color: #f8f9fa;">
+                                                <small class="text-muted">10% das cotas (ajustado)</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3 p-3 bg-light rounded">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <small class="text-muted">
+                                                <strong>💡 Como funciona:</strong> 
+                                                Digite o total de vagas e a distribuição será calculada automaticamente 
+                                                conforme os percentuais do SISU. O sistema garante que a soma seja exata.
+                                            </small>
+                                        </div>
+                                        <div class="col-md-4 text-right">
+                                            <span class="total-vagas" id="total-{{ curso.id }}">
+                                                Total de Vagas: 0
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning">
+                        <h5>⚠️ Nenhum curso disponível</h5>
+                        <p class="mb-0">Não há cursos cadastrados no sistema. Você precisa cadastrar cursos primeiro.</p>
+                    </div>
+                {% endif %}
             </div>
         </div>
 
-        <div class="form-group">
-            <button type="submit" class="btn btn-primary btn-lg">
-                💾 Criar Edição com Cursos
+        <div class="form-group text-center">
+            <button type="submit" class="btn btn-primary btn-lg mr-3" id="btn-criar">
+                💾 Criar Edição
             </button>
-            <a href="/app/edicao/index" class="btn btn-secondary btn-lg ml-2">Cancelar</a>
+            <a href="/app/edicao/index" class="btn btn-secondary btn-lg">Cancelar</a>
         </div>
     </form>
-    
-    <div class="mt-4">
-        <div class="alert alert-info">
-            <h5>🚀 Tickets 1 & 2 Implementados!</h5>
-            <ul class="mb-0">
-                <li>✅ <strong>Ticket 1:</strong> Parsing de nested forms (<code>cursos[0][nome]</code>)</li>
-                <li>✅ <strong>Ticket 2:</strong> Persistência mestre-detalhe com <code>saveMany()</code></li>
-            </ul>
-        </div>
-    </div>
 </div>
 
 <script>
-let cursoIndex = 1;
+// ===== FUNÇÕES PRINCIPAIS =====
 
-function adicionarCurso() {
-    const container = document.getElementById('cursos-container');
-    const newCurso = document.createElement('div');
-    newCurso.className = 'curso-item border p-3 mb-3';
-    newCurso.setAttribute('data-index', cursoIndex);
+
+
+// ===== INICIALIZAÇÃO =====
+
+// Inicializar estado do botão quando a página carrega
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Página carregada - inicializando...');
+    verificarBotaoSubmit();
     
-    newCurso.innerHTML = `
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <h5>Curso ${cursoIndex + 1}</h5>
-            <button type="button" class="btn btn-sm btn-danger" onclick="removerCurso(this)">
-                Remover
-            </button>
-        </div>
-        
-        <div class="form-row">
-            <div class="form-group col-md-3">
-                <label>ID do Curso</label>
-                <input type="number" class="form-control" name="cursos[${cursoIndex}][curso_id]" 
-                       placeholder="Ex: 12345">
-            </div>
-            <div class="form-group col-md-6">
-                <label>Nome do Curso</label>
-                <input type="text" class="form-control" name="cursos[${cursoIndex}][nome]" 
-                       placeholder="Ex: Engenharia da Computação">
-            </div>
-            <div class="form-group col-md-3">
-                <label>Vagas</label>
-                <input type="number" class="form-control" name="cursos[${cursoIndex}][vagas]" 
-                       placeholder="Ex: 40" min="1">
-            </div>
-        </div>
-        
-        <div class="form-row">
-            <div class="form-group col-md-6">
-                <label>Nota de Corte (opcional)</label>
-                <input type="number" class="form-control" name="cursos[${cursoIndex}][nota_corte]" 
-                       step="0.01" placeholder="Ex: 750.50">
-            </div>
-        </div>
-    `;
+    // Calcular distribuição para cursos já preenchidos (em caso de erro no form)
+    document.querySelectorAll('input[name^="total_vagas_"]').forEach(input => {
+        if (input.value && parseInt(input.value) > 0) {
+            const cursoId = input.name.replace('total_vagas_', '');
+            calcularDistribuicao(cursoId);
+        }
+    });
+});
+
+// Função para calcular distribuição automática de vagas
+function calcularDistribuicaoVagas(totalVagas) {
+    if (!Number.isInteger(totalVagas) || totalVagas <= 0) {
+        throw new Error("Total de vagas deve ser um número inteiro positivo");
+    }
     
-    container.appendChild(newCurso);
-    cursoIndex++;
+    // Calcular 50% para ampla concorrência (arredondando para baixo)
+    const vagasAc = Math.floor(totalVagas / 2);
+    
+    // Os 50% restantes (ou mais, se total for ímpar) vão para cotas
+    const vagasCotas = totalVagas - vagasAc;
+    
+    // Distribuição dentro das cotas (percentuais sobre as vagas de cota)
+    const vagasPpiBr = Math.floor(vagasCotas * 0.25);          // 25%
+    const vagasPublicaBr = Math.floor(vagasCotas * 0.25);      // 25% 
+    const vagasPpiPublica = Math.floor(vagasCotas * 0.20);     // 20%
+    const vagasPublica = Math.floor(vagasCotas * 0.20);        // 20%
+    let vagasDeficientes = Math.floor(vagasCotas * 0.10);      // 10%
+    
+    // Calcular vagas já distribuídas nas cotas
+    const vagasCotasDistribuidas = vagasPpiBr + vagasPublicaBr + vagasPpiPublica + vagasPublica + vagasDeficientes;
+    
+    // Se houver diferença (devido a arredondamentos), ajustar a categoria de deficientes
+    const diferenca = vagasCotas - vagasCotasDistribuidas;
+    vagasDeficientes += diferenca;
+    
+    // Garantir que nenhuma categoria tenha valor negativo
+    vagasDeficientes = Math.max(0, vagasDeficientes);
+    
+    const distribuicao = {
+        'vagas_ac': vagasAc,
+        'vagas_ppi_br': vagasPpiBr,
+        'vagas_publica_br': vagasPublicaBr,
+        'vagas_ppi_publica': vagasPpiPublica,
+        'vagas_publica': vagasPublica,
+        'vagas_deficientes': vagasDeficientes
+    };
+    
+    // Verificação final: a soma deve ser igual ao total
+    const somaVerificacao = Object.values(distribuicao).reduce((a, b) => a + b, 0);
+    if (somaVerificacao !== totalVagas) {
+        // Se ainda há diferença, ajustar ampla concorrência
+        const diferencaFinal = totalVagas - somaVerificacao;
+        distribuicao.vagas_ac += diferencaFinal;
+    }
+    
+    return distribuicao;
 }
 
-function removerCurso(button) {
-    const cursoItem = button.closest('.curso-item');
-    if (document.querySelectorAll('.curso-item').length > 1) {
-        cursoItem.remove();
-        reindexarCursos();
+function toggleCurso(cursoId) {
+    console.log('🎯 toggleCurso chamado para curso:', cursoId);
+    
+    const checkbox = document.getElementById(`curso_${cursoId}`);
+    const card = document.getElementById(`curso-card-${cursoId}`);
+    const vagasSection = document.getElementById(`vagas-section-${cursoId}`);
+    
+    console.log('Elementos encontrados:', {
+        checkbox: !!checkbox,
+        card: !!card, 
+        vagasSection: !!vagasSection
+    });
+    
+    if (checkbox && checkbox.checked) {
+        console.log('✅ Checkbox marcado - mostrando seção de vagas');
+        if (card) card.classList.add('selected');
+        if (vagasSection) vagasSection.style.display = 'block';
+        
+        // Focar no campo de total de vagas
+        setTimeout(() => {
+            const totalInput = document.querySelector(`input[name="total_vagas_${cursoId}"]`);
+            if (totalInput) {
+                totalInput.focus();
+                console.log('✅ Foco no campo total_vagas');
+            } else {
+                console.log('❌ Campo total_vagas não encontrado');
+            }
+        }, 100);
+        
     } else {
-        alert('Deve haver pelo menos um curso.');
+        console.log('❌ Checkbox desmarcado - escondendo seção');
+        if (card) card.classList.remove('selected');
+        if (vagasSection) vagasSection.style.display = 'none';
+        
+        // Esconder distribuição
+        const distribuicaoDiv = document.getElementById(`distribuicao-${cursoId}`);
+        if (distribuicaoDiv) {
+            distribuicaoDiv.style.display = 'none';
+        }
+        
+        // Resetar total
+        const totalElement = document.getElementById(`total-${cursoId}`);
+        if (totalElement) {
+            totalElement.textContent = 'Total de Vagas: 0';
+            totalElement.className = 'total-vagas bg-light';
+            totalElement.style.color = '#495057';
+        }
+    }
+    
+    verificarBotaoSubmit();
+}
+
+function calcularDistribuicao(cursoId) {
+    const totalInput = document.querySelector(`input[name="total_vagas_${cursoId}"]`);
+    const distribuicaoDiv = document.getElementById(`distribuicao-${cursoId}`);
+    const totalElement = document.getElementById(`total-${cursoId}`);
+    
+    if (!totalInput || !distribuicaoDiv || !totalElement) {
+        console.error(`Elementos não encontrados para curso ${cursoId}`);
+        return;
+    }
+    
+    const totalVagas = parseInt(totalInput.value || 0);
+    
+    if (totalVagas <= 0) {
+        // Esconder distribuição se não há vagas
+        distribuicaoDiv.style.display = 'none';
+        totalElement.textContent = 'Total de Vagas: 0';
+        totalElement.className = 'total-vagas bg-light';
+        totalElement.style.color = '#495057';
+        return;
+    }
+    
+    try {
+        // Calcular distribuição
+        const distribuicao = calcularDistribuicaoVagas(totalVagas);
+        
+        // Preencher campos calculados
+        document.querySelector(`input[name="vagas_ac_${cursoId}"]`).value = distribuicao.vagas_ac;
+        document.querySelector(`input[name="vagas_ppi_br_${cursoId}"]`).value = distribuicao.vagas_ppi_br;
+        document.querySelector(`input[name="vagas_publica_br_${cursoId}"]`).value = distribuicao.vagas_publica_br;
+        document.querySelector(`input[name="vagas_ppi_publica_${cursoId}"]`).value = distribuicao.vagas_ppi_publica;
+        document.querySelector(`input[name="vagas_publica_${cursoId}"]`).value = distribuicao.vagas_publica;
+        document.querySelector(`input[name="vagas_deficientes_${cursoId}"]`).value = distribuicao.vagas_deficientes;
+        
+        // Mostrar distribuição
+        distribuicaoDiv.style.display = 'block';
+        
+        // Atualizar total com sucesso
+        totalElement.textContent = `Total de Vagas: ${totalVagas}`;
+        totalElement.className = 'total-vagas bg-success';
+        totalElement.style.color = 'white';
+        
+        console.log(`Distribuição calculada para curso ${cursoId}:`, distribuicao);
+        
+    } catch (error) {
+        console.error(`Erro ao calcular distribuição para curso ${cursoId}:`, error);
+        
+        // Mostrar erro
+        totalElement.textContent = `❌ Erro: ${error.message}`;
+        totalElement.className = 'total-vagas bg-danger';
+        totalElement.style.color = 'white';
+        
+        // Esconder distribuição
+        distribuicaoDiv.style.display = 'none';
+    }
+    
+    verificarBotaoSubmit();
+}
+
+function verificarBotaoSubmit() {
+    const checkboxes = document.querySelectorAll('.curso-checkbox:checked');
+    const btnCriar = document.getElementById('btn-criar');
+    
+    console.log(`Cursos selecionados: ${checkboxes.length}`); // Debug
+    
+    if (checkboxes.length > 0) {
+        btnCriar.disabled = false;
+        btnCriar.textContent = `💾 Criar Edição com ${checkboxes.length} Curso(s) Selecionado(s)`;
+        btnCriar.classList.remove('btn-secondary');
+        btnCriar.classList.add('btn-primary');
+    } else {
+        btnCriar.disabled = false; // Sempre deixar habilitado para permitir criação sem cursos
+        btnCriar.textContent = '💾 Criar Edição';
+        btnCriar.classList.remove('btn-secondary');
+        btnCriar.classList.add('btn-primary');
     }
 }
 
-function reindexarCursos() {
-    const cursos = document.querySelectorAll('.curso-item');
-    cursos.forEach((curso, index) => {
-        curso.setAttribute('data-index', index);
-        curso.querySelector('h5').textContent = `Curso ${index + 1}`;
-        
-        const inputs = curso.querySelectorAll('input');
-        inputs.forEach(input => {
-            const name = input.getAttribute('name');
-            if (name && name.includes('[')) {
-                const fieldName = name.split('[')[1].split(']')[1];
-                input.setAttribute('name', `cursos[${index}]${fieldName}`);
-            }
-        });
+// Debug para ver o que está sendo enviado
+function debugSubmit(event) {
+    console.log('=== DEBUG SUBMIT ===');
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    console.log('Dados do formulário:');
+    for (let [key, value] of formData.entries()) {
+        console.log(`${key}: ${value}`);
+    }
+    
+    const checkboxes = document.querySelectorAll('.curso-checkbox:checked');
+    console.log(`Checkboxes marcados: ${checkboxes.length}`);
+    
+    checkboxes.forEach(checkbox => {
+        console.log(`Checkbox: ${checkbox.id} - ${checkbox.checked}`);
     });
     
-    cursoIndex = cursos.length;
+    // Verificar se há cursos com total de vagas definido
+    let cursosComVagas = 0;
+    checkboxes.forEach(checkbox => {
+        const cursoId = checkbox.id.replace('curso_', '');
+        const totalInput = document.querySelector(`input[name="total_vagas_${cursoId}"]`);
+        if (totalInput && parseInt(totalInput.value || 0) > 0) {
+            cursosComVagas++;
+        }
+    });
+    
+    console.log(`Cursos com vagas definidas: ${cursosComVagas}`);
+    
+    // Não impedir o submit, apenas debug
+    return true;
 }
 </script>
 </body>
