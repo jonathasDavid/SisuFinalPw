@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Nova Edição - Simplificado</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <script>
+    // Função para mostrar/esconder campo de vagas quando curso é marcado
+    function toggleVagasField(cursoId) {
+        console.log('toggleVagasField chamada para curso:', cursoId);
+        const checkbox = document.getElementById('curso_' + cursoId);
+        const vagasDiv = document.getElementById('vagas_div_' + cursoId);
+        const vagasInput = document.getElementById('total_vagas_' + cursoId);
+        
+        if (checkbox && checkbox.checked) {
+            if (vagasDiv) vagasDiv.style.display = 'block';
+            if (vagasInput) vagasInput.focus();
+            console.log('Curso ' + cursoId + ' marcado - mostrando campo de vagas');
+        } else {
+            if (vagasDiv) vagasDiv.style.display = 'none';
+            if (vagasInput) vagasInput.value = '';
+            console.log('Curso ' + cursoId + ' desmarcado - escondendo campo de vagas');
+        }
+    }
+    </script>
+</head>
+<body>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>📝 Criar Nova Edição (Teste)</h1>
+        <a href="/app/edicao/index" class="btn btn-secondary">← Voltar</a>
+    </div>
+
+    {% if error_message %}
+        <div class="alert alert-danger alert-dismissible fade show">
+            {{ error_message }}
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+        </div>
+    {% endif %}
+
+    <form method="post" action="/app/edicao/create">
+        <!-- Dados Básicos da Edição -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3>📋 Dados da Edição</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="nome">Nome da Edição *</label>
+                            <input type="text" class="form-control" id="nome" name="nome" 
+                                   value="{{ nome or 'Teste Curso Simple' }}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="ano">Ano *</label>
+                            <input type="number" class="form-control" id="ano" name="ano" 
+                                   value="{{ ano or 2025 }}" min="2024" max="2030" required>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="semestre">Semestre *</label>
+                            <select class="form-control" id="semestre" name="semestre" required>
+                                <option value="1" {% if semestre == 1 %}selected{% endif %}>1º Semestre</option>
+                                <option value="2" {% if semestre == 2 %}selected{% endif %}>2º Semestre</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seleção Simples de Cursos -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3>🎓 Selecionar Cursos (Teste Simples)</h3>
+                <small class="text-muted">Marque os cursos que farão parte desta edição</small>
+            </div>
+            <div class="card-body">
+                {% if cursos_disponiveis %}
+                    <div class="alert alert-info">
+                        <strong>DEBUG:</strong> {{ cursos_disponiveis|length }} cursos disponíveis
+                    </div>
+                    
+                    <div class="row">
+                        {% for curso in cursos_disponiveis %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               id="curso_{{ curso.id }}" name="curso_{{ curso.id }}"
+                                               onchange="toggleVagasField({{ curso.id }})">>
+                                        <label class="form-check-label" for="curso_{{ curso.id }}">
+                                            <strong>{{ curso.nome|e }}</strong>
+                                        </label>
+                                    </div>
+                                    <small class="text-muted">ID: {{ curso.id }}</small>
+                                    
+                                    <!-- Campo de vagas que aparece quando curso é marcado -->
+                                    <div id="vagas_div_{{ curso.id }}" style="display: none;" class="mt-2">
+                                        <label for="total_vagas_{{ curso.id }}" class="small">Total de Vagas:</label>
+                                        <input type="number" class="form-control form-control-sm" 
+                                               id="total_vagas_{{ curso.id }}" name="total_vagas_{{ curso.id }}"
+                                               min="1" max="1000" placeholder="Ex: 50"
+                                               value="{{ vagas_preenchidas.get(curso.id|string, {}).get('total_vagas', '') }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning">
+                        <h5>⚠️ Nenhum curso disponível</h5>
+                        <p class="mb-0">Não há cursos cadastrados no sistema.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Botão de Submit -->
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary btn-lg">
+                💾 Criar Edição (Teste)
+            </button>
+        </div>
+    </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+<script>
+// Log simples quando checkboxes são marcados
+document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            console.log('Checkbox changed:', this.id, this.checked);
+        });
+    });
+    
+    // Restaurar estado dos campos de vagas para cursos já selecionados
+    // (código simplificado - será implementado via server-side rendering)
+    
+    // Log do submit
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(event) {
+        console.log('=== FORM SUBMIT ===');
+        const formData = new FormData(this);
+        for (let [key, value] of formData.entries()) {
+            console.log(`${key}: ${value}`);
+        }
+    });
+});
+</script>
+
+</body>
+</html>

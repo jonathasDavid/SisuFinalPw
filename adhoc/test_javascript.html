@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste JavaScript - toggleVagasField</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <script>
+    // Função para mostrar/esconder campo de vagas quando curso é marcado
+    function toggleVagasField(cursoId) {
+        console.log('toggleVagasField chamada para curso:', cursoId);
+        const checkbox = document.getElementById('curso_' + cursoId);
+        const vagasDiv = document.getElementById('vagas_div_' + cursoId);
+        const vagasInput = document.getElementById('total_vagas_' + cursoId);
+        
+        console.log('Elementos encontrados:', {
+            checkbox: !!checkbox,
+            vagasDiv: !!vagasDiv,
+            vagasInput: !!vagasInput
+        });
+        
+        if (checkbox && checkbox.checked) {
+            if (vagasDiv) vagasDiv.style.display = 'block';
+            if (vagasInput) vagasInput.focus();
+            console.log('Curso ' + cursoId + ' marcado - mostrando campo de vagas');
+        } else {
+            if (vagasDiv) vagasDiv.style.display = 'none';
+            if (vagasInput) vagasInput.value = '';
+            console.log('Curso ' + cursoId + ' desmarcado - escondendo campo de vagas');
+        }
+    }
+    </script>
+</head>
+<body>
+<div class="container mt-4">
+    <h1>Teste JavaScript - toggleVagasField</h1>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" 
+                       id="curso_1" name="curso_1"
+                       onchange="toggleVagasField(1)">
+                <label class="form-check-label" for="curso_1">
+                    <strong>Teste - Medicina</strong>
+                </label>
+            </div>
+            <small class="text-muted">ID: 1</small>
+            
+            <!-- Campo de vagas que aparece quando curso é marcado -->
+            <div id="vagas_div_1" style="display: none;" class="mt-2">
+                <label for="total_vagas_1" class="small">Total de Vagas:</label>
+                <input type="number" class="form-control form-control-sm" 
+                       id="total_vagas_1" name="total_vagas_1"
+                       min="1" max="1000" placeholder="Ex: 50">
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mt-3">
+        <div class="card-body">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" 
+                       id="curso_2" name="curso_2"
+                       onchange="toggleVagasField(2)">
+                <label class="form-check-label" for="curso_2">
+                    <strong>Teste - Direito</strong>
+                </label>
+            </div>
+            <small class="text-muted">ID: 2</small>
+            
+            <!-- Campo de vagas que aparece quando curso é marcado -->
+            <div id="vagas_div_2" style="display: none;" class="mt-2">
+                <label for="total_vagas_2" class="small">Total de Vagas:</label>
+                <input type="number" class="form-control form-control-sm" 
+                       id="total_vagas_2" name="total_vagas_2"
+                       min="1" max="1000" placeholder="Ex: 50">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM carregado. Função toggleVagasField disponível:', typeof toggleVagasField);
+});
+</script>
+
+</body>
+</html>

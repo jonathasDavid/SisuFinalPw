@@ -20,7 +20,7 @@ class EdicaoController(Controller):
         method = self.environ["REQUEST_METHOD"]
         print(f"=== EDICAO CREATE - MÉTODO: {method} ===")
         
-        template = self.env.get_template("create_simple.html")
+        template = self.env.get_template("create_test.html")
         edicao = Edicao()
         
         # Buscar todos os cursos disponíveis no sistema para seleção
@@ -53,8 +53,13 @@ class EdicaoController(Controller):
             edicao.nome = form_data.get('nome', '')
             edicao.ano = form_data.get('ano', '')
             edicao.semestre = form_data.get('semestre', '')
-            edicao.data_inicio = form_data.get('data_inicio', '')
-            edicao.data_fim = form_data.get('data_fim', '')
+            
+            # Tratar datas vazias para evitar erro SQL
+            data_inicio = form_data.get('data_inicio', '')
+            data_fim = form_data.get('data_fim', '')
+            
+            edicao.data_inicio = data_inicio if data_inicio and data_inicio.strip() else None
+            edicao.data_fim = data_fim if data_fim and data_fim.strip() else None
             
             # Preservar dados dos cursos selecionados para reexibir em caso de erro
             cursos_selecionados_form = {}
@@ -226,28 +231,41 @@ class EdicaoController(Controller):
             from models.Curso import Curso
             print("✅ Importação EdicaoCurso e Curso OK")
             
-            # Buscar todos os EdicaoCurso desta edição
-            edicao_cursos_raw = EdicaoCurso.where('edicao_id', edicao.id).get()
-            print(f"EdicaoCursos encontrados: {len(edicao_cursos_raw)}")
+            # Buscar todos os EdicaoCurso desta edição usando query builder
+            from orator import DatabaseManager
+            db = EdicaoCurso.get_connection_resolver().connection()
             
-            for edicao_curso in edicao_cursos_raw:
-                print(f"  - EdicaoCurso ID: {edicao_curso.id}, Curso ID: {edicao_curso.curso_id}")
+            # Consulta direta
+            query_result = db.table('edicao_cursos').where('edicao_id', edicao.id).get()
+            print(f"EdicaoCursos encontrados via query: {len(query_result)}")
+            
+            for row in query_result:
+                print(f"  - EdicaoCurso ID: {row.id}, Curso ID: {row.curso_id}")
                 
-                # Buscar curso usando o ID da tabela cursos (não curso_id)
-                curso = Curso.find(edicao_curso.curso_id)
+                # Buscar curso usando o ID da tabela cursos
+                curso = Curso.find(row.curso_id)
                 if curso:
                     print(f"    ✅ Curso encontrado: {curso.nome}")
+                    
+                    # Criar mock do EdicaoCurso para o template
+                    mock_edicao_curso = type('MockEdicaoCurso', (), {
+                        'id': row.id,
+                        'edicao_id': row.edicao_id,
+                        'curso_id': row.curso_id,
+                        'vagas_ac': row.vagas_ac or 0,
+                        'vagas_ppi_br': row.vagas_ppi_br or 0,
+                        'vagas_publica_br': row.vagas_publica_br or 0,
+                        'vagas_ppi_publica': row.vagas_ppi_publica or 0,
+                        'vagas_publica': row.vagas_publica or 0,
+                        'vagas_deficientes': row.vagas_deficientes or 0,
+                    })()
+                    
                     edicao_cursos.append({
                         'curso': curso,
-                        'configuracao': edicao_curso
+                        'configuracao': mock_edicao_curso
                     })
                 else:
-                    print(f"    ❌ Curso ID {edicao_curso.curso_id} não encontrado")
-                    # Adicionar dados mock para debug
-                    edicao_cursos.append({
-                        'curso': {'id': edicao_curso.curso_id, 'nome': f'Curso {edicao_curso.curso_id} (não encontrado)'},
-                        'configuracao': edicao_curso
-                    })
+                    print(f"    ❌ Curso ID {row.curso_id} não encontrado")
             
             print(f"Total processado: {len(edicao_cursos)}")
             
